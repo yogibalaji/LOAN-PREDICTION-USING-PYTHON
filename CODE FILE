@@ -1,0 +1,244 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, roc_auc_score, roc_curve, confusion_matrix, classification_report
+from sklearn.preprocessing import StandardScaler
+
+# Suppress warnings
+warnings.filterwarnings('ignore')
+
+# Load the dataset
+df = pd.read_csv('CUSTOMERS.csv')
+
+# Display first few rows
+print("First few rows of the dataset:")
+print(df.head())
+
+# Display info about the DataFrame
+print("\nInformation about the DataFrame:")
+df.info()
+
+# Display shape of the DataFrame
+print("\nShape of the DataFrame:", df.shape)
+
+# Check for missing values
+print("\nMissing values in each column:")
+print(df.isnull().sum())
+
+# Fill missing values with the mean or median
+df['LoanAmount'] = df['LoanAmount'].fillna(df['LoanAmount'].mean())
+df['Credit_History'] = df['Credit_History'].fillna(df['Credit_History'].median())
+
+# Check for missing values again
+print("\nMissing values after imputation:")
+print(df.isnull().sum())
+
+# Drop rows with remaining missing values
+df.dropna(inplace=True)
+
+# Check for missing values again
+print("\nMissing values after dropping rows with any remaining NaNs:")
+print(df.isnull().sum())
+
+# Display shape of the DataFrame after dropping missing values
+print("\nShape of the DataFrame after dropping NaNs:", df.shape)
+
+# Presenting graph options to the user
+print("\nAvailable Graph Options for Analysis:")
+print("1. Loan Status by Gender")
+print("2. Loan Status by Marital Status")
+print("3. Loan Status by Education")
+print("4. Loan Status by Self Employment")
+print("5. Loan Status by Property Area")
+print("6. Distribution of Loan Amount")
+print("7. Distribution of Applicant Income")
+print("8. Distribution of Coapplicant Income")
+print("9. Loan Amount by Property Area")
+print("10. Correlation Heatmap")
+print("11. Pairplot of Features")
+
+# Prompt user for input
+user_choice = input("\nEnter the numbers corresponding to the graphs you want to see, separated by commas (e.g., 1,3,5): ")
+
+# Convert user input into a list of integers
+graph_choices = list(map(int, user_choice.split(',')))
+
+# Define plotting functions
+
+def plot_loan_status_by_gender():
+    plt.figure(figsize=(10, 6))
+    sns.countplot(x='Gender', hue='Loan_Status', data=df, palette='pastel')
+    plt.title('Loan Status by Gender')
+    plt.show()
+
+def plot_loan_status_by_marital_status():
+    plt.figure(figsize=(10, 6))
+    sns.countplot(x='Married', hue='Loan_Status', data=df, palette='pastel')
+    plt.title('Loan Status by Marital Status')
+    plt.show()
+
+def plot_loan_status_by_education():
+    plt.figure(figsize=(10, 6))
+    sns.countplot(x='Education', hue='Loan_Status', data=df, palette='pastel')
+    plt.title('Loan Status by Education')
+    plt.show()
+
+def plot_loan_status_by_self_employment():
+    plt.figure(figsize=(10, 6))
+    sns.countplot(x='Self_Employed', hue='Loan_Status', data=df, palette='pastel')
+    plt.title('Loan Status by Self Employment')
+    plt.show()
+
+def plot_loan_status_by_property_area():
+    plt.figure(figsize=(10, 6))
+    sns.countplot(x='Property_Area', hue='Loan_Status', data=df, palette='pastel')
+    plt.title('Loan Status by Property Area')
+    plt.show()
+
+def plot_distribution_of_loan_amount():
+    plt.figure(figsize=(10, 6))
+    sns.histplot(df['LoanAmount'], kde=True, bins=30, color='skyblue')
+    plt.title('Distribution of Loan Amount')
+    plt.show()
+
+def plot_distribution_of_applicant_income():
+    plt.figure(figsize=(10, 6))
+    sns.histplot(df['ApplicantIncome'], kde=True, bins=30, color='skyblue')
+    plt.title('Distribution of Applicant Income')
+    plt.show()
+
+def plot_distribution_of_coapplicant_income():
+    plt.figure(figsize=(10, 6))
+    sns.histplot(df['CoapplicantIncome'], kde=True, bins=30, color='skyblue')
+    plt.title('Distribution of Coapplicant Income')
+    plt.show()
+
+def plot_loan_amount_by_property_area():
+    plt.figure(figsize=(10, 6))
+    sns.boxplot(x='Property_Area', y='LoanAmount', data=df, palette='pastel')
+    plt.title('Loan Amount by Property Area')
+    plt.show()
+
+def plot_correlation_heatmap():
+    # Exclude non-numeric columns for correlation
+    numeric_df = df.select_dtypes(include=[np.number])
+    plt.figure(figsize=(12, 8))
+    sns.heatmap(numeric_df.corr(), annot=True, cmap='coolwarm', fmt=".2f")
+    plt.title('Correlation Heatmap')
+    plt.show()
+
+def plot_pairplot_of_features():
+    sns.pairplot(df, hue='Loan_Status', diag_kind='kde', palette='pastel')
+    plt.title('Pairplot of Features')
+    plt.show()
+
+# Map user choices to functions
+plot_functions = {
+    1: plot_loan_status_by_gender,
+    2: plot_loan_status_by_marital_status,
+    3: plot_loan_status_by_education,
+    4: plot_loan_status_by_self_employment,
+    5: plot_loan_status_by_property_area,
+    6: plot_distribution_of_loan_amount,
+    7: plot_distribution_of_applicant_income,
+    8: plot_distribution_of_coapplicant_income,
+    9: plot_loan_amount_by_property_area,
+    10: plot_correlation_heatmap,
+    11: plot_pairplot_of_features
+}
+
+# Execute chosen plots
+for choice in graph_choices:
+    if choice in plot_functions:
+        plot_functions[choice]()
+    else:
+        print(f"Invalid choice: {choice}. Please select from available options.")
+
+# Replace 'Loan_Status' with binary values
+df['Loan_Status'].replace('Y', 1, inplace=True)
+df['Loan_Status'].replace('N', 0, inplace=True)
+
+# Check the distribution of Loan_Status
+print("\nDistribution of Loan Status:")
+print(df['Loan_Status'].value_counts())
+
+# Encoding categorical variables
+df['Gender'] = df['Gender'].map({'Male': 1, 'Female': 0})
+df['Married'] = df['Married'].map({'Yes': 1, 'No': 0})
+df['Dependents'] = df['Dependents'].map({'0': 0, '1': 1, '2': 2, '3+': 3})
+df['Education'] = df['Education'].map({'Graduate': 1, 'Not Graduate': 0})
+df['Self_Employed'] = df['Self_Employed'].map({'Yes': 1, 'No': 0})
+df['Property_Area'] = df['Property_Area'].map({'Urban': 2, 'Rural': 0, 'Semiurban': 1})
+
+# Display head of DataFrame after encoding
+print("\nDataFrame after encoding categorical variables:")
+print(df.head())
+
+# Define feature matrix X and target vector y
+X = df.drop('Loan_Status', axis=1).values
+y = df['Loan_Status'].values
+
+# Standardize the features
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Initialize Logistic Regression model
+model = LogisticRegression(max_iter=1000)  # Increase max_iter for convergence
+
+# Train the model
+model.fit(X_train, y_train)
+
+# Make predictions
+y_pred = model.predict(X_test)
+
+# Print accuracy
+print("\nLogistic Regression accuracy =", accuracy_score(y_test, y_pred))
+
+# Print classification report
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+# Confusion Matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="YlGnBu")
+plt.title("Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()
+
+# ROC Curve
+y_pred_prob = model.predict_proba(X_test)[:, 1]
+fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
+roc_auc = roc_auc_score(y_test, y_pred_prob)
+
+plt.figure(figsize=(8, 6))
+plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = {:.2f})'.format(roc_auc))
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic (ROC) Curve')
+plt.legend(loc="lower right")
+plt.show()
+
+# Feature Importance
+feature_importance = pd.Series(model.coef_[0], index=df.drop('Loan_Status', axis=1).columns)
+feature_importance = feature_importance.abs().sort_values(ascending=False)
+
+plt.figure(figsize=(10, 6))
+sns.barplot(x=feature_importance, y=feature_importance.index, palette='viridis')
+plt.title('Feature Importance')
+plt.xlabel('Coefficient Magnitude')
+plt.ylabel('Features')
+plt.show()
+
+
+    
